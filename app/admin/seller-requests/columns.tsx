@@ -50,6 +50,15 @@ export const getColumns = ({
       header: 'Shop Name',
     },
     {
+      accessorKey: 'shopHandle',
+      header: 'Handle',
+      cell: ({ row }) => (
+        <code className="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded text-primary">
+          @{row.original.shopHandle || 'no-handle'}
+        </code>
+      ),
+    },
+    {
       accessorKey: 'identityType',
       header: 'Type',
       cell: ({ row }) => (

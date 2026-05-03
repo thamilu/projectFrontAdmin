@@ -22,6 +22,7 @@ import {
   ShieldCheck, 
   MapPin, 
   Smartphone,
+  Languages,
   ExternalLink,
   MessageSquare,
   ChevronRight
@@ -120,6 +121,24 @@ export function SellerDetailsDrawer({
                   </div>
                 </div>
                 <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Alternate Phone</p>
+                  <div className="flex items-center gap-1.5 text-sm font-semibold">
+                    <Smartphone className="h-3.5 w-3.5 text-muted-foreground" />
+                    {request.alternatePhone || 'N/A'}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Gender</p>
+                  <p className="text-sm font-semibold capitalize">{request.gender || 'N/A'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Preferred Language</p>
+                  <div className="flex items-center gap-1.5 text-sm font-semibold">
+                    <Languages className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="uppercase">{request.preferredLanguage || 'N/A'}</span>
+                  </div>
+                </div>
+                <div className="space-y-1 col-span-2">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">KYC Verification</p>
                   <div className="flex gap-2 mt-1">
                     {request.aadhaar && <Badge variant="secondary" className="text-[10px] font-mono">Aadhaar: {request.aadhaar}</Badge>}
@@ -157,21 +176,41 @@ export function SellerDetailsDrawer({
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Store Name</p>
                       <h4 className="text-lg font-bold tracking-tight text-foreground">{request.shopName || 'Unnamed Shop'}</h4>
                     </div>
+
+                    {request.shopHandle && (
+                      <div>
+                        <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mb-0.5">Shop Handle</p>
+                        <code className="text-xs font-bold bg-primary/5 text-primary px-2 py-0.5 rounded border border-primary/10">
+                          @{request.shopHandle}
+                        </code>
+                      </div>
+                    )}
                     
                     {request.businessName && request.businessName !== request.shopName && (
                       <div>
-                        <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mb-0.5">Legal Business Name</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Legal Business Name</p>
                         <p className="text-sm font-semibold">{request.businessName}</p>
                       </div>
                     )}
 
                     <div>
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Seller Identity Type</p>
-                      <p className="text-sm font-medium text-foreground/80">{IDENTITY_LABELS[request.identityType || ''] || 'Standard Seller'}</p>
+                      <p className="text-sm font-medium text-foreground/80">
+                        {request.identityTypeLabel || (request.identityType ? IDENTITY_LABELS[request.identityType] : 'Standard Seller')}
+                      </p>
                     </div>
                   </div>
                   
                   <div className="flex flex-col items-end gap-2">
+                    {request.shopLogoUrl && (
+                      <div className="mb-2 h-16 w-16 rounded-xl border-2 border-primary/10 overflow-hidden bg-white shadow-sm p-1 group">
+                        <img 
+                          src={request.shopLogoUrl} 
+                          alt="Shop Logo" 
+                          className="h-full w-full object-contain rounded-lg group-hover:scale-110 transition-transform" 
+                        />
+                      </div>
+                    )}
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Business Category</p>
                     <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-3 py-1 font-bold">
                       {request.businessTypes?.[0] || 'RETAIL'}

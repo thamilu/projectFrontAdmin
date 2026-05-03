@@ -27,6 +27,8 @@ export function useSellerRequests() {
                 phone: item.personalMobileNumber || item.businessMobileNumber || item.phone || item.phoneNumber || item.user?.phone || item.user?.phoneNumber,
                 personalPhone: item.personalMobileNumber || item.user?.phone || item.user?.phoneNumber || item.phone,
                 businessPhone: item.businessMobileNumber || item.storePhone || item.shopPhone || item.kyc?.phone || item.phone,
+                alternatePhone: item.alternatePhone || item.user?.alternatePhone,
+                preferredLanguage: item.preferredLanguage || item.user?.preferredLanguage,
 
                 taxId: item.kyc?.gstin || item.gstin || item.gstinNumber || item.taxId,
                 pan: item.kyc?.panNumber || item.pan || item.panNumber || item.documents?.find((d: any) => d.documentType === 'PAN')?.documentNumber,

@@ -26,6 +26,8 @@ export interface SellerRequest {
   businessName?: string;
   phone?: string;
   personalPhone?: string;
+  alternatePhone?: string;
+  preferredLanguage?: string;
   businessPhone?: string;
 
   // Bank Details
@@ -65,6 +67,10 @@ export interface SellerRequest {
 
   // Warehouse Info
   warehouseLocation?: string;
+
+  // Global Contextual Identity
+  shopHandle?: string;
+  shopLogoUrl?: string;
 }
 
 export type SellerRequestAction = 'approve' | 'reject';
