@@ -104,8 +104,16 @@ export function useSellerRequests() {
             toast.success(`Seller request ${action}ed successfully`);
             queryClient.invalidateQueries({ queryKey: ['sellerRequests'] });
         },
-        onError: (error) => {
-            toast.error(error.message || 'Failed to process request');
+        onError: (error: any) => {
+            let errorMessage = error.message || 'Failed to process request';
+            if (error.details) {
+                // If there are validation details, extract the first error message
+                const firstDetail = Object.values(error.details)[0];
+                if (Array.isArray(firstDetail) && firstDetail.length > 0) {
+                    errorMessage = `${errorMessage}: ${firstDetail[0]}`;
+                }
+            }
+            toast.error(errorMessage);
         },
     });
 

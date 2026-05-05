@@ -10,7 +10,7 @@ import {
 import { SellerRequest } from '@/types/seller-request';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Check, 
   X, 
@@ -25,20 +25,14 @@ import {
   Languages,
   ExternalLink,
   MessageSquare,
-  ChevronRight
+  Loader2,
+  Globe,
+  Briefcase
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SellerDetailsDrawerProps {
   request: SellerRequest | null;
@@ -59,177 +53,269 @@ export function SellerDetailsDrawer({
 }: SellerDetailsDrawerProps) {
   if (!request) return null;
 
-  const STATUS_COLORS: Record<string, string> = {
-    PENDING: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400',
-    ACTIVE: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400',
-    APPROVED: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400',
-    REJECTED: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400',
-  };
-
   const IDENTITY_LABELS: Record<string, string> = {
     INDIVIDUAL: 'Individual Seller',
     BUSINESS: 'Registered Business',
     FARMER: 'Farmer / Producer',
   };
 
+  const handleCopy = (text: string, label: string) => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(text);
+      toast.success(`${label} copied to clipboard`);
+    }
+  };
+
   return (
-    <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 border-l shadow-2xl">
-          {/* Custom Header Area */}
-          <div className="bg-muted/30 px-6 py-8 border-b">
-            <SheetHeader className="text-left">
-              <div className="flex justify-between items-center mb-2">
-                <Badge variant="outline" className={`font-bold tracking-tight px-3 py-1 rounded-full ${STATUS_COLORS[request.status] || ''}`}>
-                  {request.status}
-                </Badge>
-                <div className="flex items-center text-xs text-muted-foreground font-medium">
-                  <Clock className="mr-1 h-3 w-3" />
-                  {format(new Date(request.requestedAt), 'PPP')}
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-3xl h-full p-0 border-l border-border/50 shadow-2xl overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl">
+        {/* Cinematic Header Area - Compacted */}
+        <div className="relative overflow-hidden bg-muted/30 px-6 py-6 border-b border-border/50 shrink-0">
+          {/* Animated Mesh Gradients */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-purple-500/20 rounded-full blur-[100px] duration-700" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent blur-sm animate-scan" />
+          
+          <SheetHeader className="text-left relative z-10">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-5">
+                <div className="relative group">
+                  <div className="absolute -inset-2 bg-gradient-to-tr from-primary via-purple-500 to-blue-600 rounded-full blur opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
+                  <Avatar className="h-14 w-14 border-2 border-background shadow-2xl relative">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${request.fullName}`} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-black text-xl">
+                      {request.fullName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-1 -right-1 bg-emerald-500 border-4 border-background h-6 w-6 rounded-full shadow-lg flex items-center justify-center">
+                    <Check className="h-3 w-3 text-white stroke-[4px]" />
+                  </div>
+                </div>
+                <div>
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 backdrop-blur-md px-3 py-1 font-black text-[10px] tracking-[0.2em] uppercase mb-2 animate-pulse">
+                    {request.status} REQUEST
+                  </Badge>
+                  <SheetTitle className="text-2xl font-black tracking-tighter text-foreground leading-none mb-1">
+                    Seller Console
+                  </SheetTitle>
+                  <div className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md border border-primary/20">v2.0 Verified</span>
+                    <span>System ID: {request.id.slice(0, 8)}</span>
+                  </div>
                 </div>
               </div>
-              <SheetTitle className="text-2xl font-bold tracking-tight text-foreground">
-                Seller Application
-              </SheetTitle>
-              <SheetDescription className="text-sm font-medium">
-                ID: <span className="font-mono text-xs">{request.id.slice(0, 8)}...</span> • Submitted by {request.fullName}
-              </SheetDescription>
-            </SheetHeader>
+              <div className="flex flex-col items-end text-[10px] font-black text-muted-foreground bg-background/40 px-3 py-2 rounded-xl border border-border/50 backdrop-blur-md shadow-inner">
+                <span className="text-primary flex items-center gap-1.5 mb-0.5 uppercase tracking-widest"><Clock className="h-3 w-3" /> Entry Timestamp</span>
+                <span className="text-foreground text-[11px]">{format(new Date(request.requestedAt), 'PPP p')}</span>
+              </div>
+            </div>
+          </SheetHeader>
+        </div>
+
+        {/* Tabbed Inspection Console */}
+        <Tabs defaultValue="identity" className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="px-6 pt-4 shrink-0 bg-muted/10 border-b border-border/50">
+            <TabsList className="grid grid-cols-4 w-full h-12 bg-background/50 border border-border/50 p-1 rounded-xl backdrop-blur-md shadow-inner">
+              <TabsTrigger value="identity" className="rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
+                <User className="h-3.5 w-3.5 mr-2" /> Identity
+              </TabsTrigger>
+              <TabsTrigger value="storefront" className="rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
+                <Building className="h-3.5 w-3.5 mr-2" /> Storefront
+              </TabsTrigger>
+              <TabsTrigger value="operations" className="rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
+                <Globe className="h-3.5 w-3.5 mr-2" /> Logistics
+              </TabsTrigger>
+              <TabsTrigger value="compliance" className="rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
+                <ShieldCheck className="h-3.5 w-3.5 mr-2" /> Finance
+              </TabsTrigger>
+            </TabsList>
           </div>
 
-          <div className="px-6 py-6 h-[calc(100vh-180px)] overflow-y-auto space-y-8 scrollbar-thin">
-            {/* Identity & Contact Section */}
-            <section className="space-y-4">
-              <h3 className="flex items-center text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                <User className="mr-2 h-3.5 w-3.5 text-primary" /> Personal Profile
-              </h3>
-              
-              <div className="grid grid-cols-2 gap-6 bg-card p-5 rounded-2xl border border-border/50 shadow-sm">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Full Name</p>
-                  <p className="text-sm font-semibold">{request.fullName}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Email Address</p>
-                  <p className="text-sm font-semibold break-all text-primary underline underline-offset-4">{request.email}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Contact Number</p>
-                  <div className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Smartphone className="h-3.5 w-3.5 text-muted-foreground" />
-                    {request.personalPhone || request.phone || 'N/A'}
+          <div className="flex-1 overflow-y-auto px-6 py-8 scrollbar-thin scrollbar-thumb-primary/40 scrollbar-track-muted/10 hover:scrollbar-thumb-primary/60 transition-colors">
+            <div className="space-y-10 pb-20">
+            {/* Identity Tab Content */}
+            <TabsContent value="identity" className="space-y-8 mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-[2rem] blur opacity-0 group-hover:opacity-100 transition duration-1000" />
+                <div className="relative bg-card/40 backdrop-blur-md p-8 rounded-[2rem] border border-border/50 shadow-2xl space-y-6 overflow-hidden">
+                  {/* Background Watermark */}
+                  <div className="absolute top-0 right-0 -mr-10 -mt-10 opacity-[0.03] rotate-12 pointer-events-none">
+                    <User className="h-64 w-64" />
                   </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Alternate Phone</p>
-                  <div className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Smartphone className="h-3.5 w-3.5 text-muted-foreground" />
-                    {request.alternatePhone || 'N/A'}
+                  
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Full Legal Name</p>
+                      <p className="text-xl font-black tracking-tight text-foreground">{request.fullName}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Contact Vector</p>
+                      <div className="flex items-center gap-2 group/item cursor-pointer" onClick={() => handleCopy(request.email, 'Email')}>
+                        <div className="p-2 bg-primary/10 rounded-xl text-primary group-hover/item:scale-110 transition-transform"><Smartphone className="h-4 w-4" /></div>
+                        <p className="text-sm font-bold text-foreground/80 group-hover/item:text-primary transition-colors">{request.email}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Contact Channels</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 group/item cursor-pointer" onClick={() => handleCopy(request.personalPhone || '', 'Personal Phone')}>
+                          <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-600 group-hover/item:scale-110 transition-transform"><Smartphone className="h-3.5 w-3.5" /></div>
+                          <p className="text-xs font-bold text-foreground/80 group-hover/item:text-emerald-600 transition-colors">Personal: {request.personalPhone || 'N/A'}</p>
+                        </div>
+                        <div className="flex items-center gap-2 group/item cursor-pointer" onClick={() => handleCopy(request.alternatePhone || '', 'Alternate Phone')}>
+                          <div className="p-1.5 bg-slate-500/10 rounded-lg text-slate-600 group-hover/item:scale-110 transition-transform"><Smartphone className="h-3.5 w-3.5" /></div>
+                          <p className="text-xs font-bold text-foreground/80 group-hover/item:text-slate-600 transition-colors">Alternate: {request.alternatePhone || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Demographics</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="bg-muted font-black text-[10px] px-3">{request.gender || 'N/A'}</Badge>
+                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black text-[10px] px-3 flex items-center gap-1 uppercase">
+                          <Languages className="h-3 w-3" /> {request.preferredLanguage || 'EN'}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Gender</p>
-                  <p className="text-sm font-semibold capitalize">{request.gender || 'N/A'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Preferred Language</p>
-                  <div className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Languages className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="uppercase">{request.preferredLanguage || 'N/A'}</span>
-                  </div>
-                </div>
-                <div className="space-y-1 col-span-2">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">KYC Verification</p>
-                  <div className="flex gap-2 mt-1">
-                    {request.aadhaar && <Badge variant="secondary" className="text-[10px] font-mono">Aadhaar: {request.aadhaar}</Badge>}
-                    {request.pan && <Badge variant="secondary" className="text-[10px] font-mono">PAN: {request.pan}</Badge>}
+
+                  <div className="pt-6 border-t border-border/50 border-dashed space-y-4">
+                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" /> KYC Verification Suite
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      {request.aadhaar && (
+                        <div 
+                          className="flex items-center justify-between bg-emerald-500/5 text-emerald-600 border border-emerald-500/20 p-4 rounded-2xl group/kyc cursor-pointer hover:bg-emerald-500/10 transition-all"
+                          onClick={() => handleCopy(request.aadhaar!, 'Aadhaar')}
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Aadhaar (UIDAI)</span>
+                            <p className="text-sm font-black">{request.aadhaar}</p>
+                          </div>
+                          <Check className="h-5 w-5 opacity-40 group-hover/kyc:scale-125 transition-transform" />
+                        </div>
+                      )}
+                      {request.pan && (
+                        <div 
+                          className="flex items-center justify-between bg-emerald-500/5 text-emerald-600 border border-emerald-500/20 p-4 rounded-2xl group/kyc cursor-pointer hover:bg-emerald-500/10 transition-all"
+                          onClick={() => handleCopy(request.pan!, 'PAN')}
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Permanent Account Num</span>
+                            <p className="text-sm font-black">{request.pan}</p>
+                          </div>
+                          <Check className="h-5 w-5 opacity-40 group-hover/kyc:scale-125 transition-transform" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
+            </TabsContent>
 
-              <div className="bg-muted/20 p-5 rounded-2xl border border-dashed">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Personal Address</p>
-                <div className="text-xs font-medium leading-relaxed text-muted-foreground italic">
-                  {[
-                    request.addressLine1,
-                    request.addressLine2,
-                    request.district,
-                    request.city,
-                    request.state,
-                    request.pincode,
-                    request.country
-                  ].filter(Boolean).join(', ') || 'N/A'}
-                </div>
-              </div>
-            </section>
-
-            {/* Business Section */}
-            <section className="space-y-4">
-              <h3 className="flex items-center text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                <Building className="mr-2 h-3.5 w-3.5 text-primary" /> Storefront Details
-              </h3>
-              
-              <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm">
-                <div className="p-5 border-b bg-muted/10 flex justify-between items-start">
-                  <div className="space-y-3">
+            {/* Storefront Tab Content */}
+            <TabsContent value="storefront" className="space-y-8 mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="bg-card/40 backdrop-blur-md rounded-[2.5rem] border border-border/50 shadow-2xl overflow-hidden group">
+                <div className="p-10 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/5 flex justify-between items-start">
+                  <div className="space-y-6">
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Store Name</p>
-                      <h4 className="text-lg font-bold tracking-tight text-foreground">{request.shopName || 'Unnamed Shop'}</h4>
+                      <Badge className="bg-primary/20 text-primary border-none shadow-none px-3 py-1 font-black text-[9px] tracking-widest mb-3">
+                        BRAND IDENTITY
+                      </Badge>
+                      <h4 className="text-4xl font-black tracking-tighter text-foreground leading-none">{request.shopName || 'Unnamed Shop'}</h4>
+                      {request.shopHandle && (
+                        <div className="mt-4 flex items-center gap-2">
+                          <code className="text-xs font-black bg-foreground text-background px-4 py-1.5 rounded-full shadow-2xl">
+                            @{request.shopHandle}
+                          </code>
+                        </div>
+                      )}
                     </div>
 
-                    {request.shopHandle && (
+                    <div className="flex flex-wrap gap-x-10 gap-y-4">
                       <div>
-                        <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mb-0.5">Shop Handle</p>
-                        <code className="text-xs font-bold bg-primary/5 text-primary px-2 py-0.5 rounded border border-primary/10">
-                          @{request.shopHandle}
-                        </code>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Entity Structure</p>
+                        <p className="text-sm font-bold text-foreground">
+                          {request.identityTypeLabel || (request.identityType ? IDENTITY_LABELS[request.identityType] : 'Premium Retailer')}
+                        </p>
                       </div>
-                    )}
-                    
-                    {request.businessName && request.businessName !== request.shopName && (
                       <div>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Legal Business Name</p>
-                        <p className="text-sm font-semibold">{request.businessName}</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Business Contact</p>
+                        <div 
+                          className="flex items-center gap-2 text-sm font-bold text-primary cursor-pointer hover:underline"
+                          onClick={() => handleCopy(request.businessPhone || request.phone || '', 'Business Phone')}
+                        >
+                          <Smartphone className="h-3.5 w-3.5" /> {request.businessPhone || request.phone || 'N/A'}
+                        </div>
                       </div>
-                    )}
-
-                    <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Seller Identity Type</p>
-                      <p className="text-sm font-medium text-foreground/80">
-                        {request.identityTypeLabel || (request.identityType ? IDENTITY_LABELS[request.identityType] : 'Standard Seller')}
-                      </p>
+                      <div>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Trade Name</p>
+                        <p className="text-sm font-bold text-foreground underline decoration-primary/40 decoration-2 underline-offset-4">
+                          {request.businessName || request.fullName}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-end gap-2">
-                    {request.shopLogoUrl && (
-                      <div className="mb-2 h-16 w-16 rounded-xl border-2 border-primary/10 overflow-hidden bg-white shadow-sm p-1 group">
-                        <img 
-                          src={request.shopLogoUrl} 
-                          alt="Shop Logo" 
-                          className="h-full w-full object-contain rounded-lg group-hover:scale-110 transition-transform" 
-                        />
-                      </div>
-                    )}
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Business Category</p>
-                    <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-3 py-1 font-bold">
-                      {request.businessTypes?.[0] || 'RETAIL'}
-                    </Badge>
+                  <div className="flex flex-col items-end gap-3">
+                    <div className="h-20 w-20 rounded-2xl border-2 border-background overflow-hidden bg-white shadow-xl p-2 relative group/logo">
+                      <div className="absolute inset-0 bg-primary opacity-0 group-hover/logo:opacity-10 transition-opacity" />
+                      <img 
+                        src={request.shopLogoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${request.shopName}`} 
+                        alt="Shop Logo" 
+                        className="h-full w-full object-contain rounded-xl transition-transform duration-700 group-hover/logo:scale-110" 
+                      />
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">Operation Category</p>
+                      <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none shadow-xl shadow-emerald-500/20 px-4 py-2 font-black text-[10px] tracking-widest uppercase">
+                        {request.businessTypes?.[0] || 'RETAILER'}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="p-5 space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">About Business</p>
-                    <p className="text-sm leading-relaxed text-foreground/80 italic">
-                      "{request.shopDescription || 'No description provided.'}"
-                    </p>
+                <div className="p-10 space-y-8 bg-background/20">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-inner">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <p className="text-[11px] font-black text-primary uppercase tracking-[0.3em]">Corporate Bio & Mission</p>
+                    </div>
+                    <div className="relative p-6 bg-muted/30 rounded-3xl border border-border/50 border-dashed">
+                      <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
+                        <MessageSquare className="h-24 w-24" />
+                      </div>
+                      <p className="text-base leading-relaxed text-foreground/80 font-medium italic break-words">
+                        "{request.shopDescription || 'The applicant has not provided a mission statement yet.'}"
+                      </p>
+                    </div>
                   </div>
+                </div>
+              </div>
+            </TabsContent>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Business Address</p>
-                      <div className="text-xs font-medium text-muted-foreground leading-snug">
+            {/* Logistics Tab Content */}
+            <TabsContent value="operations" className="space-y-8 mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="grid grid-cols-1 gap-6">
+                {/* Store Location */}
+                <div className="bg-card/40 backdrop-blur-md rounded-[2rem] border border-border/50 p-8 space-y-6 shadow-xl group overflow-hidden relative">
+                  <div className="absolute top-0 right-0 -mr-10 -mt-10 opacity-[0.03] -rotate-12 group-hover:rotate-0 transition-transform duration-1000">
+                    <Building className="h-64 w-64" />
+                  </div>
+                  
+                  <div className="flex justify-between items-start relative z-10">
+                    <div className="space-y-4 flex-1">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500"><Building className="h-5 w-5" /></div>
+                        <h5 className="font-black text-sm uppercase tracking-widest">Base of Operations</h5>
+                      </div>
+                      <div 
+                        className="text-lg font-bold leading-tight text-foreground/90 hover:text-primary cursor-pointer transition-colors max-w-md"
+                        onClick={() => handleCopy([request.storeAddressLine1, request.storeCity, request.storePincode].filter(Boolean).join(', '), 'Store Address')}
+                      >
                         {[
                           request.storeAddressLine1,
                           request.storeAddressLine2,
@@ -238,165 +324,173 @@ export function SellerDetailsDrawer({
                           request.storeState,
                           request.storePincode,
                           request.storeCountry
-                        ].filter(Boolean).join(', ') || 'N/A'}
+                        ].filter(Boolean).join(', ') || 'Global Distribution Center'}
                       </div>
                     </div>
-                    {request.authorizedSignatory && (
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Authorized Signatory</p>
-                        <p className="text-xs font-semibold">{request.authorizedSignatory}</p>
-                      </div>
-                    )}
                     {request.googleMapsUrl && (
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Map Link</p>
-                        <a href={request.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary font-bold flex items-center gap-1 hover:underline">
-                          <MapPin className="h-3 w-3" /> View Location <ExternalLink className="h-2.5 w-2.5" />
+                      <Button variant="outline" className="h-14 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-background/50 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-lg group/btn" asChild>
+                        <a href={request.googleMapsUrl} target="_blank" rel="noopener noreferrer">
+                          <MapPin className="h-4 w-4 mr-2 group-hover/btn:scale-125 transition-transform" /> GPS VERIFY <ExternalLink className="ml-2 h-3 w-3" />
                         </a>
-                      </div>
+                      </Button>
                     )}
+                  </div>
+                </div>
+
+                {/* Residential Address */}
+                <div className="bg-card/40 backdrop-blur-md rounded-[2rem] border border-border/50 p-8 space-y-6 shadow-xl group overflow-hidden relative">
+                  <div className="absolute top-0 right-0 -mr-10 -mt-10 opacity-[0.02] rotate-12 group-hover:rotate-0 transition-transform duration-1000">
+                    <MapPin className="h-64 w-64" />
+                  </div>
+                  <div className="space-y-4 relative z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-rose-500/10 rounded-xl text-rose-500"><MapPin className="h-5 w-5" /></div>
+                      <h5 className="font-black text-sm uppercase tracking-widest">Primary Residence</h5>
+                    </div>
+                    <div 
+                      className="text-lg font-bold leading-tight text-foreground/90 hover:text-rose-500 cursor-pointer transition-colors max-w-md"
+                      onClick={() => handleCopy([request.addressLine1, request.city, request.pincode].filter(Boolean).join(', '), 'Residential Address')}
+                    >
+                      {[
+                        request.addressLine1,
+                        request.addressLine2,
+                        request.district,
+                        request.city,
+                        request.state,
+                        request.pincode,
+                        request.country
+                      ].filter(Boolean).join(', ') || 'N/A'}
+                    </div>
                   </div>
                 </div>
               </div>
-            </section>
+            </TabsContent>
 
-            {/* Specialized Info Section */}
-            {(request.identityType === 'FARMER' || request.warehouseLocation) && (
-              <section className="space-y-4">
-                <h3 className="flex items-center text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                  <ShieldCheck className="mr-2 h-3.5 w-3.5 text-primary" /> Specialized Operations
-                </h3>
-                
-                <div className="bg-card border border-border/50 rounded-2xl p-5 space-y-4 shadow-sm">
-                  {request.identityType === 'FARMER' && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Farm Location</p>
-                        <p className="text-sm font-semibold">{request.farmLocation || 'N/A'}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Land Area</p>
-                        <p className="text-sm font-semibold">{request.landArea || 'N/A'}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Crop Types</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {request.cropTypes?.map(crop => (
-                            <Badge key={crop} variant="secondary" className="text-[10px]">{crop}</Badge>
-                          )) || 'N/A'}
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Own Produce</p>
-                        <Badge variant={request.isOwnProduce ? "default" : "outline"} className="text-[10px]">
-                          {request.isOwnProduce ? 'Verified' : 'Reseller'}
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
-
-                  {request.warehouseLocation && (
-                    <div className="space-y-1 pt-2 border-t border-dashed">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Warehouse Location</p>
-                      <p className="text-sm font-semibold italic">"{request.warehouseLocation}"</p>
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {/* Legal & Banking Section */}
-            <section className="space-y-4">
-              <h3 className="flex items-center text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                <ShieldCheck className="mr-2 h-3.5 w-3.5 text-primary" /> Compliance & Finance
-              </h3>
-              
+            {/* Compliance Tab Content */}
+            <TabsContent value="compliance" className="space-y-8 mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="grid grid-cols-1 gap-4">
-                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-background p-2 rounded-lg border shadow-sm">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                <div className="group relative bg-card/40 backdrop-blur-md rounded-[2rem] border border-border/50 p-8 shadow-xl flex items-center justify-between hover:border-primary/40 transition-all overflow-hidden">
+                   <div className="absolute top-0 right-0 -mr-5 -mt-5 opacity-[0.02] pointer-events-none">
+                    <FileText className="h-48 w-48" />
+                  </div>
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className="h-16 w-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center text-primary shadow-inner group-hover:scale-110 transition-transform">
+                      <Briefcase className="h-8 w-8" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Tax / GSTIN</p>
-                      <p className="text-sm font-mono font-bold tracking-tight">{request.gstin || request.taxId || 'N/A'}</p>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Commercial Tax ID / GSTIN</p>
+                      <p 
+                        className="text-2xl font-mono font-black tracking-tighter text-foreground group-hover:text-primary cursor-pointer transition-colors"
+                        onClick={() => handleCopy(request.gstin || request.taxId || '', 'Tax ID')}
+                      >
+                        {request.gstin || request.taxId || 'UNREGISTERED'}
+                      </p>
                     </div>
                   </div>
                   {request.businessLicense && (
-                    <Button variant="outline" size="sm" className="h-8 rounded-lg font-bold text-xs" asChild>
-                      <a href={request.businessLicense} target="_blank" rel="noopener noreferrer">Review License</a>
+                    <Button variant="outline" className="h-12 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-background/50 relative z-10" asChild>
+                      <a href={request.businessLicense} target="_blank" rel="noopener noreferrer">
+                        VIEW LICENSE <ExternalLink className="ml-2 h-4 w-4" />
+                      </a>
                     </Button>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-xl border">
-                  <div className="bg-background p-2 rounded-lg border shadow-sm">
-                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                <div className="group relative bg-card/40 backdrop-blur-md rounded-[2rem] border border-border/50 p-8 shadow-xl flex items-center gap-6 hover:border-purple-500/40 transition-all overflow-hidden">
+                   <div className="absolute top-0 right-0 -mr-5 -mt-5 opacity-[0.02] pointer-events-none">
+                    <CreditCard className="h-48 w-48" />
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Bank Account ({request.bankIfscCode || 'IFSC N/A'})</p>
-                    <p className="text-sm font-mono font-bold tracking-tight">{request.bankAccountNumber || 'N/A'}</p>
+                  <div className="h-16 w-16 bg-purple-500/10 rounded-[1.5rem] flex items-center justify-center text-purple-500 shadow-inner group-hover:scale-110 transition-transform relative z-10">
+                    <CreditCard className="h-8 w-8" />
+                  </div>
+                  <div className="flex-1 relative z-10">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Financial Settlement Ledger</p>
+                    <div className="flex items-center justify-between">
+                      <p 
+                        className="text-2xl font-mono font-black tracking-tighter text-foreground group-hover:text-purple-500 cursor-pointer transition-colors"
+                        onClick={() => handleCopy(request.bankAccountNumber || '', 'Account Number')}
+                      >
+                        {request.bankAccountNumber ? `**** **** ${request.bankAccountNumber.slice(-4)}` : 'N/A'}
+                      </p>
+                      <Badge variant="outline" className="bg-purple-500/5 text-purple-500 border-purple-500/20 font-black text-[10px] px-4 py-1 tracking-widest rounded-full">
+                        IFSC: {request.bankIfscCode || 'UNSET'}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </div>
-            </section>
-            
-            {/* Audit Trail Section */}
-            {(request.approvedBy || request.rejectionReason) && (
-              <section className="space-y-4 pt-4">
-                <h3 className="flex items-center text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                  <Clock className="mr-2 h-3.5 w-3.5 text-primary" /> Audit History
-                </h3>
-                <div className={`p-4 rounded-xl border border-dashed ${request.status === 'REJECTED' ? 'bg-rose-50/50 border-rose-200' : 'bg-muted/20'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant={request.status === 'REJECTED' ? 'destructive' : 'secondary'} className="text-[9px] uppercase font-bold px-1.5 h-4">
+
+              {/* Audit Intelligence Panel */}
+              {(request.approvedBy || request.rejectionReason) && (
+                <div className={cn(
+                  "relative p-8 rounded-[2rem] border-2 shadow-2xl overflow-hidden group/audit",
+                  request.status === 'REJECTED' ? "bg-rose-500/5 border-rose-500/20" : "bg-emerald-500/5 border-emerald-500/20"
+                )}>
+                   <div className="absolute top-0 right-0 -mr-10 -mt-10 opacity-[0.05] -rotate-12">
+                    <ShieldCheck className="h-64 w-64" />
+                  </div>
+                  <div className="flex items-center gap-4 mb-6 relative z-10">
+                    <Badge className={cn(
+                      "text-[10px] uppercase font-black px-6 py-2 h-auto tracking-widest border-none shadow-xl",
+                      request.status === 'REJECTED' ? "bg-rose-500 shadow-rose-500/20" : "bg-emerald-500 shadow-emerald-500/20"
+                    )}>
                       {request.status}
                     </Badge>
-                    <span className="text-[11px] font-medium text-muted-foreground italic">by {request.approvedBy || 'System'}</span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Audit Supervisor</span>
+                      <span className="text-sm font-black text-foreground">{request.approvedBy || 'SYSTEM_VERIFIER'}</span>
+                    </div>
                   </div>
                   {request.rejectionReason && (
-                    <div className="space-y-1.5">
-                      <p className="text-[10px] font-bold text-rose-800 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" /> Rejection Note:
-                      </p>
-                      <p className="text-sm text-rose-700/80 dark:text-rose-400/80 font-medium leading-relaxed">
-                        "{request.rejectionReason}"
-                      </p>
+                    <div className="space-y-3 relative z-10">
+                      <div className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" /> Intelligence Briefing
+                      </div>
+                      <div className="p-6 bg-background/50 rounded-2xl border border-rose-500/20 backdrop-blur-sm">
+                        <p className="text-base text-rose-600 dark:text-rose-400 font-bold leading-relaxed italic">
+                          "{request.rejectionReason}"
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
-              </section>
-            )}
-          </div>
-
-          {/* Action Footer */}
-          {request.status === 'PENDING' && (
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t shadow-[0_-10px_30px_rgba(0,0,0,0.05)] grid grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                onClick={() => onReject(request.id)}
-                disabled={isProcessing}
-                className="h-12 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold"
-              >
-                <X className="mr-2 h-4 w-4" /> Reject
-              </Button>
-              <Button
-                onClick={() => onApprove(request.id)}
-                disabled={isProcessing}
-                className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/20"
-              >
-                <Check className="mr-2 h-4 w-4" /> Approve
-              </Button>
+              )}
+            </TabsContent>
             </div>
-          )}
-        </SheetContent>
-      </Sheet>
-    </>
+          </div>
+        </Tabs>
+
+        {/* Tactical Action Footer - Compacted */}
+        {request.status === 'PENDING' && (
+          <div className="shrink-0 p-4 sm:p-6 bg-background/80 backdrop-blur-2xl border-t border-border/50 grid grid-cols-2 gap-4 relative z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.15)]">
+            <Button
+              variant="outline"
+              onClick={() => onReject(request.id)}
+              disabled={isProcessing}
+              className="h-12 rounded-xl border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white font-black uppercase tracking-[0.2em] transition-all duration-500 hover:shadow-[0_0_40px_rgba(244,63,94,0.4)] group overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-rose-500/5 group-hover:bg-transparent transition-colors" />
+              {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <X className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-500" />}
+              Reject Access
+            </Button>
+            <Button
+              onClick={() => onApprove(request.id)}
+              disabled={isProcessing}
+              className="h-12 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:via-teal-600 hover:to-emerald-700 text-white font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-[0_20px_40px_rgba(16,185,129,0.3)] hover:shadow-[0_0_50px_rgba(16,185,129,0.5)] hover:-translate-y-1 active:translate-y-0 active:scale-95 group relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%] animate-shimmer pointer-events-none" />
+              {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5 group-hover:scale-125 transition-transform duration-500" />}
+              Grant Approval
+            </Button>
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }
 
 // Helper icon
-function AlertCircle(props: any) {
+function AlertCircle(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}

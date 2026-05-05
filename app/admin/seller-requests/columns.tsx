@@ -7,6 +7,8 @@ import { Eye, CheckCircle2, XCircle, Clock, AlertCircle, HelpCircle } from 'luci
 import { StatusBadge } from '@/components/admin/shared/status-badge';
 import { SellerRequest } from '@/types/seller-request';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ColumnProps {
   onView: (request: SellerRequest) => void;
@@ -43,7 +45,27 @@ export const getColumns = ({
     {
       accessorKey: 'fullName',
       header: 'Applicant',
-      cell: ({ row }) => <div className="font-medium">{row.original.fullName}</div>,
+      cell: ({ row }) => (
+        <div 
+          className="flex items-center gap-3 cursor-pointer group/applicant"
+          onClick={() => onView(row.original)}
+          title="Click to view full details"
+        >
+          <div className="relative">
+            <div className="absolute -inset-1 bg-primary/20 rounded-full blur opacity-0 group-hover/applicant:opacity-100 transition-opacity" />
+            <Avatar className="h-9 w-9 border-2 border-border/50 shadow-sm relative">
+              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${row.original.fullName}`} />
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                {row.original.fullName.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-bold text-foreground leading-tight group-hover/applicant:text-primary transition-colors">{row.original.fullName}</span>
+            <span className="text-[11px] text-muted-foreground">{row.original.email}</span>
+          </div>
+        </div>
+      ),
     },
     {
       accessorKey: 'shopName',
@@ -53,7 +75,7 @@ export const getColumns = ({
       accessorKey: 'shopHandle',
       header: 'Handle',
       cell: ({ row }) => (
-        <code className="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded text-primary">
+        <code className="text-[11px] font-black bg-primary/5 text-primary border border-primary/20 px-2 py-0.5 rounded-full backdrop-blur-sm tracking-tight">
           @{row.original.shopHandle || 'no-handle'}
         </code>
       ),
@@ -87,35 +109,61 @@ export const getColumns = ({
         const isPending = request.status === 'PENDING';
 
         return (
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => onView(request)} title="View Details">
-              <Eye className="h-4 w-4" />
-            </Button>
-            {isPending && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-green-600 hover:text-green-700"
-                  onClick={() => onApprove(request.id)}
-                  disabled={isProcessing}
-                  title="Approve"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-red-600 hover:text-red-700"
-                  onClick={() => onReject(request.id)}
-                  disabled={isProcessing}
-                  title="Reject"
-                >
-                  <XCircle className="h-4 w-4" />
-                </Button>
-              </>
-            )}
-          </div>
+          <TooltipProvider>
+            <div className="flex justify-end gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onView(request)}
+                      className="h-8 px-3 hover:bg-primary/10 hover:text-primary transition-all duration-300 gap-2 font-bold text-xs"
+                      aria-label={`View full details for ${request.fullName}`}
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>View Details</TooltipContent>
+              </Tooltip>
+
+              {isPending && (
+                <>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-600 transition-all duration-300"
+                        onClick={() => onApprove(request.id)}
+                        disabled={isProcessing}
+                        aria-label={`Approve registration for ${request.fullName}`}
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Approve Seller</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-300"
+                        onClick={() => onReject(request.id)}
+                        disabled={isProcessing}
+                        aria-label={`Reject registration for ${request.fullName}`}
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Reject Request</TooltipContent>
+                  </Tooltip>
+                </>
+              )}
+            </div>
+          </TooltipProvider>
         );
       },
     },

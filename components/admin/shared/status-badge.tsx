@@ -28,7 +28,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         return {
           label: status,
           variant: 'default' as const,
-          className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 hover:bg-green-100',
+          className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 backdrop-blur-sm shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:bg-emerald-500/20',
           icon: CheckCircle
         };
       case 'REJECTED':
@@ -36,7 +36,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         return {
           label: status,
           variant: 'destructive' as const,
-          className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 hover:bg-red-100',
+          className: 'bg-rose-500/10 text-rose-500 border-rose-500/20 backdrop-blur-sm shadow-[0_0_15px_rgba(244,63,94,0.1)] hover:bg-rose-500/20',
           icon: XCircle
         };
       case ORDER_STATUS.PENDING:
@@ -44,10 +44,11 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       case ORDER_STATUS.SHIPPED:
       case SHOP_STATUS.PENDING_REVIEW:
       case 'UNDER_REVIEW':
+      case 'PENDING':
         return {
           label: status,
           variant: 'secondary' as const,
-          className: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 hover:bg-amber-100',
+          className: 'bg-amber-500/10 text-amber-500 border-amber-500/20 backdrop-blur-sm shadow-[0_0_15px_rgba(245,158,11,0.1)] animate-pulse hover:bg-amber-500/20',
           icon: Clock
         };
       case 'NEEDS_MORE_INFO':
@@ -56,14 +57,14 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         return {
           label: status,
           variant: 'secondary' as const,
-          className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 hover:bg-orange-100',
+          className: 'bg-orange-500/10 text-orange-500 border-orange-500/20 backdrop-blur-sm shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:bg-orange-500/20',
           icon: AlertCircle
         };
       default:
         return {
           label: status,
           variant: 'outline' as const,
-          className: '',
+          className: 'bg-slate-500/10 text-slate-400 border-slate-500/20 backdrop-blur-sm',
           icon: null
         };
     }
