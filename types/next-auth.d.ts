@@ -1,6 +1,6 @@
 import { DefaultSession, DefaultUser } from "next-auth";
-import { JWT, DefaultJWT } from "next-auth/jwt";
-import { AuthErrorCode } from "@/lib/auth/errors";
+import { DefaultJWT } from "next-auth/jwt";
+import { type AuthErrorCode } from "@/core/auth";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -10,12 +10,16 @@ declare module "next-auth" {
     user: {
       id: string;
       roles?: string[];
+      username?: string;
+      permissions?: string[];
     } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
     id?: string;
     roles?: string[];
+    username?: string;
+    permissions?: string[];
   }
 }
 

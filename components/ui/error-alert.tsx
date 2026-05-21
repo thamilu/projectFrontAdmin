@@ -4,7 +4,7 @@
  */
 
 import { AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 
 interface ErrorAlertProps {
   message: string;

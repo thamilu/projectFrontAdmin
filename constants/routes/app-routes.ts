@@ -20,7 +20,7 @@ export const APP_ROUTES = {
     ROOT:     '/admin',
 
     // Dashboard
-    DASHBOARD: '/admin/dashboard',
+    DASHBOARD: '/admin',
 
     // Users
     USERS:       '/admin/users',

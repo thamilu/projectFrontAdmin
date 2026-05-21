@@ -15,12 +15,12 @@
 
 import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
-import { fontClassNames } from '@/lib/fonts';
-import { siteConfig } from '@/lib/config/site';
+import { fontClassNames } from '@/design-system/typography/fonts';
+import { siteConfig } from '@/config/site';
 import { Providers } from './providers';
-import { SkipToContent } from '@/components/layout/skip-to-content';
+import { SkipToContent } from '@/shared/ui/skip-to-content';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 import './globals.css'; // Global Tailwind CSS styles
 
 /**

@@ -1,9 +1,18 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { loadAuthConfig, getTokenEndpoint } from '@/lib/auth/config';
-import { createSession, type SessionData } from '@/lib/auth/session';
-import { validateIdToken } from '@/lib/auth/tokens';
-import { getRequestLogger } from '@/lib/observability/logger';
+import {
+  loadAuthConfig,
+  getTokenEndpoint,
+  parseTokenResponse,
+  parseErrorResponse,
+  DEFAULT_TOKEN_EXPIRY_SECONDS,
+} from '@/core/auth';
+import {
+  createSession,
+  validateIdToken,
+  type SessionData,
+} from '@/core/auth/server';
+import { getRequestLogger } from '@/core/observability/logger';
 import {
   apiError,
   apiSuccess,
@@ -11,12 +20,7 @@ import {
   isValidRedirectPath,
   createTimeoutController,
   API_ERROR_CODES,
-} from '@/lib/api/response-helpers';
-import {
-  parseTokenResponse,
-  parseErrorResponse,
-  DEFAULT_TOKEN_EXPIRY_SECONDS,
-} from '@/lib/auth/token-schemas';
+} from '@/infrastructure/http/response-helpers';
 
 const BodySchema = z.object({
   username: z.string().min(1),

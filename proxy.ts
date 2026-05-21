@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-
-// This must match the cookie name configured in lib/auth.ts
-const COOKIE_NAME = 'eshop-admin-session-token';
+import { NEXTAUTH_SESSION_COOKIE } from '@/core/auth/constants';
 
 export async function proxy(request: NextRequest) {
   const token = await getToken({
     req: request,
-    cookieName: COOKIE_NAME
+    cookieName: NEXTAUTH_SESSION_COOKIE,
+    secret: process.env.NEXTAUTH_SECRET,
   });
 
   const isAuth = !!token;
@@ -16,7 +15,7 @@ export async function proxy(request: NextRequest) {
 
   if (isAuthPage) {
     if (isAuth) {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+      return NextResponse.redirect(new URL('/admin', request.url));
     }
     return null;
   }
@@ -28,7 +27,7 @@ export async function proxy(request: NextRequest) {
     }
 
     return NextResponse.redirect(
-      new URL(`/api/auth/signin?callbackUrl=${encodeURIComponent(from)}`, request.url)
+      new URL(`/auth/login?callbackUrl=${encodeURIComponent(from)}`, request.url)
     );
   }
 

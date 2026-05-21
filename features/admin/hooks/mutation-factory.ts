@@ -19,7 +19,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getErrorMessage } from '@/lib/utils/error-handling';
+import { getErrorMessage } from '@/core/errors';
 
 /**
  * Returns typed `onSuccess` and `onError` handler factories bound to

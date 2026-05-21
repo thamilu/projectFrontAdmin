@@ -21,10 +21,10 @@
 'use client';
 
 import { useQuery, type QueryKey } from '@tanstack/react-query';
-import { useDataTable } from '@/hooks/use-data-table';
+import { useDataTable } from '@/shared/table/use-data-table';
 
 /** Minimal shape expected from paginated backend responses */
-export interface PageResponse<T> {
+interface PageResponse<T> {
   content: T[];
   totalElements: number;
   totalPages: number;

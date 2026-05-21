@@ -1,9 +1,19 @@
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: ApiError;
-  meta?: ApiMeta;
-}
+/**
+ * Legacy API Types Facade
+ * 
+ * Re-exports structures from the centralized Contracts layer to preserve 
+ * backward compatibility across existing services and UI components.
+ */
+
+import { 
+  ApiResponse as ContractApiResponse, 
+  ApiMeta as ContractApiMeta, 
+  PaginationParams as ContractPaginationParams 
+} from '@/contracts';
+
+export type ApiResponse<T> = ContractApiResponse<T>;
+export type ApiMeta = ContractApiMeta;
+export type PaginationParams = ContractPaginationParams;
 
 export class ApiError extends Error {
   public status: number;
@@ -23,18 +33,4 @@ export class ApiError extends Error {
     this.details = details;
     this.code = code;
   }
-}
-
-export interface ApiMeta {
-  page?: number;
-  limit?: number;
-  total?: number;
-  totalPages?: number;
-}
-
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
 }

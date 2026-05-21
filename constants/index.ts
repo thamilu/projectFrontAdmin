@@ -7,6 +7,7 @@
 
 // API endpoints & HTTP config
 export * from './api/endpoints';
+export * from './api/client-url';
 
 // App navigation routes
 export * from './routes/app-routes';

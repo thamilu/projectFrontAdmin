@@ -15,19 +15,18 @@
 
 'use client';
 
-import { useState, useEffect, type ReactNode, Suspense } from 'react';
+import { useState, type ReactNode, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { ThemeProvider } from '@/components/providers/theme-provider';
+import { ThemeProvider } from '@/app/providers/theme-provider';
 // AuthProvider removed in favor of NextAuthProvider (SessionProvider)
-import NextAuthProvider from '@/components/NextAuthProvider';
-import { ToastProvider } from '@/components/providers/toast-provider';
+import NextAuthProvider from '@/core/auth/components/next-auth-provider';
+import { ToastProvider } from '@/app/providers/toast-provider';
 import { Toaster } from 'sonner';
-import { AnalyticsProvider } from '@/components/providers/analytics-provider';
-import { ErrorBoundary } from '@/components/common/error-boundary';
-import { NetworkStatus } from '@/components/common/network-status';
-import { ScreenReaderAnnouncer } from '@/components/common/screen-reader-announcer';
-import { useAppIntegrations } from '@/hooks/use-app-integrations';
+import { AnalyticsProvider } from '@/app/providers/analytics-provider';
+import { ErrorBoundary } from '@/shared/feedback/error-boundary';
+import { NetworkStatus } from '@/shared/ui/network-status';
+import { ScreenReaderAnnouncer } from '@/shared/ui/screen-reader-announcer';
 
 interface ProvidersProps {
   children: ReactNode;

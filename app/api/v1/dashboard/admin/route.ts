@@ -1,16 +1,15 @@
 import { env } from "@/env";
-import { requireAuth } from '@/lib/api/session-utils';
-import { buildBackendUrl, proxyToBackend } from '@/lib/api/backend-fetch';
+import { requireAuth, buildBackendUrl, proxyToBackend } from '@/infrastructure/http';
 
 // Dashboard data is user-specific, so we use private caching only
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  const [session, errorResponse] = await requireAuth();
+  const [session, errorResponse] = await requireAuth(request);
   if (errorResponse) return errorResponse;
 
   const backendUrl = buildBackendUrl(
-    `${env.apiBaseUrl}/api/v1/dashboard/admin`,
+    `${env.backendApiUrl}/api/v1/dashboard/admin`,
     request
   );
 

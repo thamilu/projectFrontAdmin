@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getLastExchange } from '@/lib/auth-debug'
+import { getLastExchange } from '@/core/auth/auth-debug'
 
 /**
  * Development-only auth debug endpoint.

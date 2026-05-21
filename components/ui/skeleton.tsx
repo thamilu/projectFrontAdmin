@@ -4,7 +4,7 @@
  * Part of shadcn/ui component library
  */
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 
 function Skeleton({
   className,

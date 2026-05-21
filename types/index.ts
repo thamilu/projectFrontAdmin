@@ -444,3 +444,14 @@ export interface ServiceWorkerState {
   hasUpdate: boolean;
   installPrompt: PWAInstallPrompt | null;
 }
+
+// Lucide icon type helpers and exports
+import type { LucideIcon, LucideProps } from 'lucide-react';
+export type { LucideIcon, LucideProps };
+export type * from './lucide-icons';
+
+// Canonical Domain & Contract Exports for Refactored Architecture
+export type { Product } from '@/domain/products/entities/product';
+export type { SellerRequestDto as SellerRequest, SellerRequestActionDto as SellerRequestAction } from '@/contracts';
+
+

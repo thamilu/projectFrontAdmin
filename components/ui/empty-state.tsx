@@ -3,7 +3,7 @@
  * Shows when no data is available
  */
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 import { Button } from './button';
 
 interface EmptyStateProps {

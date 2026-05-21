@@ -117,6 +117,7 @@ interface ToastContextType {
 }
 
 let toastContext: ToastContextType | null = null;
+let nextToastId = 0;
 
 export const toast = {
   success: (title: string, description?: string, action?: ToastProps['action']) => {
@@ -135,6 +136,8 @@ export const toast = {
     toastContext?.addToast(props);
   }
 };
+
+import { useCallback } from 'react';
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
@@ -162,8 +165,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const addToast = (toastProps: Omit<ToastProps, 'id' | 'onClose'>) => {
-    const id = Date.now().toString();
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  const addToast = useCallback((toastProps: Omit<ToastProps, 'id' | 'onClose'>) => {
+    const id = `toast-${nextToastId++}`;
     const newToast: ToastProps = {
       ...toastProps,
       id,
@@ -171,28 +178,27 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     };
     
     setToasts(prev => [...prev, newToast]);
-  };
+  }, [removeToast]);
 
-  const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  };
-
-  // Set up the toast context
-  toastContext = { addToast, removeToast };
+  // Set up the toast context in effect to avoid render-phase side effects
+  useEffect(() => {
+    toastContext = { addToast, removeToast };
+    return () => {
+      toastContext = null;
+    };
+  }, [addToast, removeToast]);
 
   return (
     <>
       {children}
       
-      {/* ...existing code... */}
-
       {/* Offline Prompt */}
       {!isOnline && showOfflinePrompt && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background p-6 rounded-lg max-w-md mx-4 border">
             <div className="flex items-center gap-3 mb-4">
               <WifiOff className="h-6 w-6 text-red-500" />
-              <h3 className="font-semibold">You're offline</h3>
+              <h3 className="font-semibold">You&apos;re offline</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Some features may not be available. Your cart and wishlist are saved locally.
@@ -217,25 +223,29 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
       {/* Toast Container */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
-        {toasts.map((toast) => (
-          <Toast key={toast.id} {...toast} />
+        {toasts.map((toastItem) => (
+          <Toast key={toastItem.id} {...toastItem} />
         ))}
       </div>
     </>
   );
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+  prompt(): Promise<void>;
+}
+
 // PWA Install Prompt Component
 export function PWAInstallPrompt() {
   const [showInstall, setShowInstall] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [deferredPrompt, setDeferredPrompt] = useState<any | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handler = (e: any) => {
+    const handler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowInstall(true);
     };
 

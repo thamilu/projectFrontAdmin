@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { env } from "@/env";
-import { requireAuth, proxyToBackend, parseRequestBody } from '@/lib/api';
-import { ApproveSellerRequestSchema, RejectSellerRequestSchema } from '@/lib/validation/schemas/seller-request';
+import { requireAuth, proxyToBackend, parseRequestBody } from '@/infrastructure/http';
+import { ApproveSellerRequestSchema, RejectSellerRequestSchema } from '@/core/validation/schemas/seller-request';
 
 type Action = 'approve' | 'reject';
 
@@ -10,7 +10,7 @@ export async function POST(
   context: { params: Promise<{ id: string; action: string }> }
 ) {
   // Authenticate user
-  const [session, errorResponse] = await requireAuth();
+  const [session, errorResponse] = await requireAuth(request);
   if (errorResponse) return errorResponse;
 
   const { id, action } = await context.params;
@@ -45,7 +45,7 @@ export async function POST(
   }
 
   // Proxy to backend
-  const backendUrl = `${env.apiBaseUrl}/api/v1/sellers/requests/${id}/${action}`;
+  const backendUrl = `${env.backendApiUrl}/api/v1/sellers/requests/${id}/${action}`;
   console.log(`Proxying seller action to: ${backendUrl}`);
 
   return proxyToBackend({

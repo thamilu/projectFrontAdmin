@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Current User Information Endpoint - GET /api/auth/me
  * 
  * Returns information about the currently authenticated user from NextAuth session.
@@ -12,9 +12,26 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { getRequestLogger } from '@/lib/observability/logger';
+import { authOptions } from '@/core/auth/server';
+import { getRequestLogger } from '@/core/observability/logger';
 import { decodeJwt } from 'jose';
+
+interface DecodedUser {
+  id: string;
+  email?: string;
+  name?: string;
+}
+
+interface Diagnostics {
+  fromSession: boolean;
+  sessionRoles: number;
+  cookieFound: boolean;
+  cookieTokenLength: number;
+  decodedSub: string | null | unknown;
+  decodingError: string | null;
+  claimsFound: string[];
+  allCookies: string[];
+}
 
 /**
  * GET /api/auth/me
@@ -22,22 +39,22 @@ import { decodeJwt } from 'jose';
  * Returns current user information from NextAuth session or accessToken cookie
  * 
  * Response (200):
- * `json
+ * ```json
  * {
  *   "id": "user-123",
  *   "email": "user@example.com",
  *   "name": "John Doe",
  *   "roles": ["customer"]
  * }
- * `
+ * ```
  * 
  * Response (401):
- * `json
+ * ```json
  * {
  *   "error": "Unauthorized",
  *   "message": "No active session"
  * }
- * `
+ * ```
  */
 export async function GET(req: NextRequest) {
   const requestId = req.headers.get('x-request-id') || crypto.randomUUID();
@@ -47,15 +64,16 @@ export async function GET(req: NextRequest) {
     // 1. Try NextAuth session first
     const session = await getServerSession(authOptions);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let user = session?.user as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let roles = (session as any)?.roles || [];
+    let user: DecodedUser | null = session?.user ? {
+      id: session.user.id,
+      email: session.user.email || undefined,
+      name: session.user.name || undefined
+    } : null;
+    
+    let roles = session?.roles || [];
 
     // Diagnostics to return to client
-    // diagnostics type definition is loose to collect various info
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const diagnostics: any = {
+    const diagnostics: Diagnostics = {
       fromSession: !!session,
       sessionRoles: roles.length,
       cookieFound: false,
@@ -63,12 +81,12 @@ export async function GET(req: NextRequest) {
       decodedSub: null,
       decodingError: null,
       claimsFound: [],
-      allCookies: req.cookies.getAll().map(c => c.name) // Add this line
+      allCookies: req.cookies.getAll().map(c => c.name)
     };
 
     // ❌ CRITICAL: Check for refresh errors from NextAuth
     // If the token refresh failed, we must return 401 so the client logs out
-    if ((session as any)?.error === 'RefreshAccessTokenError') {
+    if (session?.error === 'RefreshAccessTokenError') {
       log.warn('Session has refresh token error, returning 401', { requestId });
       return NextResponse.json(
         {
@@ -111,32 +129,28 @@ export async function GET(req: NextRequest) {
           const decoded = decodeJwt(accessToken);
           log.info('Decoded accessToken cookie', { requestId, sub: decoded.sub });
           
-          diagnostics.decodedSub = decoded.sub;
+          diagnostics.decodedSub = decoded.sub || null;
           diagnostics.claimsFound = Object.keys(decoded);
 
           // Map claims to user object
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const realmRoles = (decoded.realm_access as any)?.roles || [];
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const resourceAccess = (decoded.resource_access as any) || {};
+          const realmAccess = decoded.realm_access as { roles?: string[] } | undefined;
+          const realmRoles = realmAccess?.roles || [];
+          const resourceAccess = decoded.resource_access as Record<string, { roles?: string[] }> | undefined || {};
           
           // Try to gather roles from all possible locations
           const decodedRoles = [
               ...(decoded.roles as string[] || []),
               ...realmRoles,
               // Flatten resource_access roles
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              ...Object.values(resourceAccess).flatMap((r: any) => r.roles || [])
+              ...Object.values(resourceAccess).flatMap((r) => (r as { roles?: string[] }).roles || [])
           ];
           
           // If we found a valid user in the token
           if (decoded.sub) {
              user = {
                id: decoded.sub,
-               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-               email: (decoded.email as string) || (decoded as any).preferred_username,
-               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-               name: (decoded.name as string) || (decoded as any).given_name,
+               email: (decoded.email as string) || (decoded as { preferred_username?: string }).preferred_username,
+               name: (decoded.name as string) || (decoded as { given_name?: string }).given_name,
              };
              roles = Array.from(new Set(decodedRoles)); // Dedupe
           }
@@ -166,7 +180,7 @@ export async function GET(req: NextRequest) {
     }
 
     const userData = {
-      id: user.id || user.sub,
+      id: user.id,
       email: user.email,
       name: user.name,
       roles: roles,
